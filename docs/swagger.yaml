@@ -1,0 +1,165 @@
+definitions:
+  handlers.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  storage.AssignLeadRequest:
+    properties:
+      lead_end:
+        type: string
+      lead_start:
+        type: string
+    type: object
+  storage.Client:
+    properties:
+      end_date:
+        type: string
+      id:
+        type: integer
+      lead_capacity:
+        type: integer
+      leads:
+        items:
+          $ref: '#/definitions/storage.Lead'
+        type: array
+      name:
+        type: string
+      priority:
+        enum:
+        - HIGH
+        - MEDIUM
+        - LOW
+        type: string
+      start_date:
+        type: string
+    type: object
+  storage.ClientRequest:
+    properties:
+      end_date:
+        type: string
+      lead_capacity:
+        type: integer
+      name:
+        type: string
+      priority:
+        enum:
+        - HIGH
+        - MEDIUM
+        - LOW
+        type: string
+      start_date:
+        type: string
+    type: object
+  storage.Lead:
+    properties:
+      client_id:
+        type: integer
+      lead_end:
+        type: string
+      lead_id:
+        type: string
+      lead_start:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /clients:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/storage.Client'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Receives a list of clients
+      tags:
+      - client
+    post:
+      parameters:
+      - description: New client payload
+        in: body
+        name: _
+        required: true
+        schema:
+          $ref: '#/definitions/storage.ClientRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: bool
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Creates a new client
+      tags:
+      - client
+  /clients/{id}:
+    get:
+      description: Returns a single client array with the found user or a string with
+        an error in case user is not found
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/storage.Client'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Get client by clientID
+      tags:
+      - client
+  /clients/assign:
+    post:
+      description: |-
+        Selects a suitable client for assignment. Assigns a Lead to him and returns ID of this client.
+        Initially sort users by their availability and suitable time frames.
+        Then sort users by their priority and percentage of free capacity. Select the user with the highest indicator.
+      parameters:
+      - description: Assign lead payload
+        in: body
+        name: _
+        required: true
+        schema:
+          $ref: '#/definitions/storage.AssignLeadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/storage.Lead'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Assigns a Lead to a suitable client
+      tags:
+      - client
+swagger: "2.0"
